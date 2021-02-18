@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!-- Required meta tags -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" >
+
+<title>Hello, world!</title>
+
+</head>
+<body>
+
+<div class="container">
+
+    <button class="btn m-4 " onclick="getAll()"> Get All </button>
+
+    <table class="table table-striped">
+        <thead>
+
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">Description</th>
+            <th scope="col">Action</th>
+          </tr>
+
+        </thead>
+        <tbody>
+
+          <tr>
+            <th>Nothing is here</th>
+          </tr>
+
+        </tbody>
+
+        <div>
+            <input name="titleNew">
+            <input name="descNew">
+            
+            <button onclick="post()" class="btn btn-sm btn-info m-1">Add new</button>  
+            
+        </div>
+
+      </table>
+
+
+</div>
+<!-- Optional JavaScript -->
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" ></script>
+<script>
+
+function getAll ()
+{
+    $.get(
+        'http://localhost:12/item',
+        (data => {
+
+            let tbody = $("tbody")
+            tbody.html('')
+
+            data.forEach((item, i) => {
+                tbody.append(`
+                <tr>
+                    <th scope="row">${i+1}</th>
+                    <td>${item.title}</td>
+                    <td>${item.description}</td>
+                    <td>
+                        <button id=${item.id} onclick="edit(this)" class="btn btn-sm btn-info m-1">Edit</button>    
+                        <button onclick="deleteItem(${item.id})" class="btn btn-sm btn-danger m-1">Delete</button>    
+                    </td>
+                </tr>
+                `)
+            });
+        })
+    )
+}
+
+function deleteItem (id)
+{
+    $.ajax({
+        url: 'http://localhost:12/item/delete/'+id,
+        type: 'DELETE',
+        data: {
+            id 
+        },
+        success: (data) => {
+            getAll()
+        },
+        error: console.log 
+    })
+}
+
+function edit (el)
+{
+    let tbody = $("tbody")
+    tbody.html(`
+        <tr>
+            <th scope="row">#</th>
+            <td><input value="${$(el).parent().prev().prev().text()}" name="title"></td>
+            <td><input value="${$(el).parent().prev().text()}" name="desc"></td>
+            <td>
+                <button id=${el.getAttribute('id')} onclick="update(this)" class="btn btn-sm btn-info m-1">Update</button>  
+            </td>
+        </tr>
+    `)
+    
+}
+
+function update (el)
+{
+    let title = $('[name=title]').val() ?? 'a',
+    desc = $('[name=desc]').val() ?? 'a',
+    id = el.getAttribute('id')
+
+    $.ajax({
+        url: "http://localhost:12/item/put/" + id,
+        type: "PUT",
+        data: JSON.stringify({
+            title,
+            description : desc 
+        }),
+        success: (data) => {
+            alert(data.item ?? 'data updated')
+            getAll()
+        },
+        error: data => console.log(data.responseText) 
+    })
+}
+
+function post ()
+{
+    let title = $('[name=titleNew]'),
+    desc = $('[name=descNew]')
+
+    if(!title.val() || !desc.val())
+    {
+        return alert("Fill all the input!")
+    }
+
+    $.ajax({
+        url : 'http://localhost:12/item/post/',
+        type : 'POST',
+        data : {
+            title : title.val(),
+            description : desc.val()  
+        },
+        success : (data) => {
+            console.log(data)
+            alert('Item added')
+            title.val('')
+            desc.val('')
+            getAll()
+        }
+    })
+}
+
+
+
+</script>
+
+
+
+</body>
+</html>
